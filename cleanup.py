@@ -93,7 +93,13 @@ def delete_rows(row_dict, dry_run):
     cursor = cnx.cursor()
 
     try:
-        for key in ['base_report_id', 'log_file_storage_request_id', 'execution_id', 'orchestrator_id', 'workflow_step_id', 'workflow_id']:
+        # Order matters here; we need to respect foreign key constraints.
+        for key in ['base_report_id',
+                    'log_file_storage_request_id',
+                    'execution_id',
+                    'orchestrator_id',
+                    'workflow_step_id',
+                    'workflow_id']:
             if row_dict[key]:
                 table = key[:-3]
 
@@ -103,15 +109,17 @@ def delete_rows(row_dict, dry_run):
                     workflow_tbl_field_map = { 'workflow' : 'workflow_commands_id',
                                                'workflow_step' : 'workflow_step_id'
                                              }
-                    sql = '''DELETE FROM workflow_workflow_step WHERE ''' + workflow_tbl_field_map[table] + ''' in (%s)''' % idlist
-
+                    sql = ( '''DELETE FROM workflow_workflow_step WHERE '''
+                        + workflow_tbl_field_map[table]
+                        + ''' IN (%s)''' % idlist
+                    )
                     print(sql)
+
                     if not dry_run:
                         cursor.execute(sql)
                         cnx.commit()
 
-                sql = '''DELETE FROM ''' + table + ''' WHERE id in (%s)''' % idlist
-
+                sql = '''DELETE FROM ''' + table + ''' WHERE id IN (%s)''' % idlist
                 print(sql)
                 if not dry_run:
                     cursor.execute(sql)
@@ -123,6 +131,7 @@ def delete_rows(row_dict, dry_run):
 
     finally:
         cnx.close()
+
 
 def main(dry_run, max_execs, months, project):
     if max_execs > HARD_MAX:
