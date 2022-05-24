@@ -1,6 +1,6 @@
 # rundeck-history-cleanup
 
-This Python script is a nuclear option for Rundeck databases that have grown too unwieldy to manage using the RD CLI tool. In my case, the execution table had over 180 million rows, and the execution history cleanup job was no longer functioning. 
+A nuclear option for Rundeck databases that have grown too unwieldy to manage using the RD CLI tool. In my case, the execution table had over 180 million rows, and the execution history cleanup job was no longer functioning. 
 
 
 ## Caveats
