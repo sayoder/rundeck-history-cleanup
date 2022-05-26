@@ -7,7 +7,7 @@ from pprint import pprint
 
 load_dotenv()
 
-HARD_MAX = 1000
+HARD_MAX = 1000000
 
 DB_CONN = {
     'user': os.getenv('DB_USER'),
@@ -17,7 +17,7 @@ DB_CONN = {
     'database': os.getenv('DB_NAME')
 }
 
-def get_rows(max_execs, months, project):
+def get_rows(max_execs, days, project):
     cnx = pymysql.connect(**DB_CONN)
     try:
         cursor = cnx.cursor()
@@ -26,7 +26,7 @@ def get_rows(max_execs, months, project):
         subq = f'''\
         SELECT id, workflow_id, orchestrator_id
         FROM   execution
-        WHERE  date_started < DATE_SUB(NOW(), INTERVAL %(months)s MONTH)
+        WHERE  date_started < DATE_SUB(NOW(), INTERVAL %(days)s DAY)
         {project_filter}
         LIMIT  %(max_execs)s
         '''
@@ -51,7 +51,7 @@ def get_rows(max_execs, months, project):
         '''
         params = {
             'max_execs' : max_execs,
-            'months' : months,
+            'days' : days,
         }
         if project:
             params['project'] = project
@@ -126,11 +126,11 @@ def delete_rows(row_dict, dry_run, verbose):
         cnx.close()
 
 
-def main(dry_run, max_execs, months, project, verbose):
+def main(dry_run, max_execs, days, project, verbose):
     if max_execs > HARD_MAX:
         max_execs = HARD_MAX
 
-    row_dict = get_rows(max_execs, months, project)
+    row_dict = get_rows(max_execs, days, project)
     delete_rows(row_dict, dry_run, verbose)
 
 
@@ -141,11 +141,11 @@ if __name__ == '__main__':
 
     parser.add_argument('--dry-run', default=False, action='store_true', help="Don't run any DELETEs")
     parser.add_argument('--max', required=True, type=int, help="Maximum number of executions to delete")
-    parser.add_argument('--months', required=True, type=int, help="Delete executions older than this many months")
+    parser.add_argument('--days', required=True, type=int, help="Delete executions older than this many days")
     parser.add_argument('--project', required=False, type=str, default='', help="Project to delete executions from")
     parser.add_argument('--verbose', required=False, default=False, action='store_true', help="Log DELETE queries")
 
     args = parser.parse_args()
 
-    main(args.dry_run, args.max, args.months, args.project, args.verbose)
+    main(args.dry_run, args.max, args.days, args.project, args.verbose)
 
